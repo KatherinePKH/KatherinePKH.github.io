@@ -195,13 +195,6 @@
       text-decoration: underline;
     }
 
-    .credential {
-      margin-top: 10px;
-      color: #6b7280;
-      font-size: 0.92rem;
-      text-align: center;
-    }
-
     @media (max-width: 360px) {
       .login-shell {
         padding: 24px 18px 22px;
@@ -214,7 +207,6 @@
     <section class="brand">
       <h1>欢迎回来</h1>
       <p>请输入你的账号和密码继续登录</p>
-      <p class="credential">测试账号：手机号 13666204489 / 密码 1234567890</p>
     </section>
 
     <form class="login-form" id="loginForm" autocomplete="on">
@@ -246,6 +238,13 @@
       <button class="alt-btn" type="button">使用手机号快捷登录</button>
     </div>
 
+    <p class="note">
+      没有账号？ <a href="#">立即注册</a>
+    </p>
+  </main>
+
+  <script>
+    const form = document.getElementById('loginForm');
     const validAccount = '13666204489';
     const validPassword = '1234567890';
 
@@ -261,14 +260,7 @@
         window.location.href = 'directory.html';
       } else {
         alert('账号或密码错误，请检查后重试');
-      } = form.account.value.trim();
-      const password = form.password.value.trim();
-      if (!account || !password) {
-        alert('请填写完整的登录信息');
-        return;
       }
-      alert(`登录成功：${account}`);
-      form.reset();
     });
   </script>
 </body>
