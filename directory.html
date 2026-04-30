@@ -29,17 +29,34 @@
       font-size: 1.9rem;
     }
     .page-shell p {
-      margin: 0;
+      margin: 0 0 24px;
       color: #6b7280;
       font-size: 1rem;
       line-height: 1.6;
+    }
+    .entry-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 22px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #4f46e5, #7c3aed);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 600;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+    .entry-btn:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
     }
   </style>
 </head>
 <body>
   <main class="page-shell">
     <h1>功能目录页</h1>
-    <p>暂无其他页面信息。</p>
+    <p>请选择下面的入口继续访问功能页面。</p>
+    <a class="entry-btn" href="admin-dashboard.html">管理端工作台</a>
   </main>
 </body>
 </html>
