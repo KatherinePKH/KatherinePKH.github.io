@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学习管理 - AI Family 培训助手</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; background:#f5f7fa; color:#1f2937; height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+
+        /* ===== 顶部导航 ===== */
+        .top-bar { height:48px; background:#fff; border-bottom:1px solid #e5e7eb; display:flex; align-items:center; padding:0 20px; flex-shrink:0; z-index:20; }
+        .top-bar .logo { display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px; color:#4f46e5; }
+        .top-bar .logo .dot { width:22px; height:22px; background:linear-gradient(135deg,#6366f1,#8b5cf6); border-radius:6px; }
+        .top-bar .breadcrumb { margin-left:24px; font-size:13px; color:#9ca3af; }
+        .top-bar .breadcrumb span { color:#374151; font-weight:500; }
+        .top-bar .right-actions { margin-left:auto; display:flex; align-items:center; gap:16px; }
+        .ai-trigger { display:flex; align-items:center; gap:6px; padding:6px 14px; border-radius:8px; background:linear-gradient(135deg,#6366f1,#8b5cf6); color:#fff; font-size:13px; font-weight:500; cursor:pointer; border:none; transition:all .15s; }
+        .ai-trigger:hover { box-shadow:0 2px 10px rgba(99,102,241,.4); transform:translateY(-1px); }
+
+        /* ===== 主布局 ===== */
+        .main-layout { flex:1; display:flex; overflow:hidden; position:relative; }
+
+        /* ===== 左侧导航 ===== */
+        .sidebar { width:180px; background:#fff; border-right:1px solid #e5e7eb; padding:12px 0; flex-shrink:0; overflow-y:auto; }
+        .sidebar .nav-group { margin-bottom:4px; }
+        .sidebar .nav-group-label { font-size:11px; color:#9ca3af; padding:8px 20px 4px; font-weight:500; }
+        .sidebar .nav-item { display:flex; align-items:center; gap:8px; padding:9px 20px; font-size:13px; color:#6b7280; cursor:pointer; transition:all .15s; border-left:3px solid transparent; }
+        .sidebar .nav-item:hover { background:#f9fafb; color:#374151; }
+        .sidebar .nav-item.active { background:#eef2ff; color:#4f46e5; border-left-color:#4f46e5; font-weight:600; }
+        .sidebar .nav-item .nav-icon { width:18px; text-align:center; font-size:14px; flex-shrink:0; }
+
+        /* ===== 中间主区域 ===== */
+        .content-area { flex:1; background:#f5f7fa; display:flex; align-items:center; justify-content:center; }
+        .content-placeholder { text-align:center; color:#d1d5db; }
+        .content-placeholder .ph-icon { font-size:48px; margin-bottom:12px; }
+        .content-placeholder p { font-size:14px; }
+        .content-placeholder .ph-hint { font-size:12px; margin-top:6px; color:#e5e7eb; }
+
+        /* ===== 遮罩 ===== */
+        .ai-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,.18); z-index:50; opacity:0; pointer-events:none; transition:opacity .3s ease; }
+        .ai-overlay.show { opacity:1; pointer-events:auto; }
+
+        /* ===== 右侧 AI Family 抽屉 ===== */
+        .ai-drawer { position:fixed; top:0; right:0; bottom:0; width:680px; max-width:92vw; background:#fff; z-index:60; display:flex; flex-direction:row; box-shadow:-4px 0 24px rgba(0,0,0,.1); transform:translateX(100%); transition:transform .35s cubic-bezier(.4,0,.2,1); }
+        .ai-drawer.open { transform:translateX(0); }
+
+        /* — 左侧 Tab 栏 — */
+        .ai-tab-rail { width:120px; background:#f8f9fb; border-right:1px solid #e5e7eb; display:flex; flex-direction:column; flex-shrink:0; }
+        .ai-tab-rail .rail-header { padding:20px 14px 16px; text-align:center; border-bottom:1px solid #e5e7eb; }
+        .ai-tab-rail .rail-logo-wrap { display:flex; flex-direction:column; align-items:center; gap:6px; }
+        .ai-tab-rail .rail-title { font-size:15px; font-weight:700; background:linear-gradient(90deg,#c084fc,#818cf8,#60a5fa); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; letter-spacing:0.5px; }
+        .ai-tab-rail .tab-list { flex:1; padding:10px 0; }
+        .ai-tab-rail .ai-tab { display:flex; align-items:center; gap:8px; padding:10px 14px; margin:2px 8px; border-radius:8px; font-size:13px; color:#6b7280; cursor:pointer; transition:all .15s; border:1.5px solid transparent; }
+        .ai-tab-rail .ai-tab:hover { background:#eef2ff; color:#4f46e5; }
+        .ai-tab-rail .ai-tab.active { background:#eef2ff; color:#4f46e5; font-weight:600; border-color:#c7d2fe; }
+        .ai-tab-rail .ai-tab .tab-icon { font-size:16px; flex-shrink:0; }
+
+        /* — 右侧内容区 — */
+        .ai-content { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
+        .ai-content-header { display:flex; align-items:center; justify-content:space-between; padding:14px 20px; border-bottom:1px solid #e5e7eb; flex-shrink:0; }
+        .ai-content-header .content-title { font-size:15px; font-weight:600; color:#1f2937; }
+        .close-btn { width:32px; height:32px; border-radius:8px; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:18px; color:#9ca3af; transition:all .15s; }
+        .close-btn:hover { background:#f3f4f6; color:#374151; }
+
+        /* ===== 聊天区 ===== */
+        .chat-area { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+        .chat-messages { flex:1; overflow-y:auto; padding:24px; }
+        .chat-bubble { max-width:92%; margin-bottom:18px; animation:fadeIn .35s ease; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .chat-bubble.ai { display:flex; gap:12px; }
+        .chat-bubble.ai .avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,#6366f1,#8b5cf6); display:flex; align-items:center; justify-content:center; font-size:15px; color:#fff; flex-shrink:0; margin-top:2px; }
+        .chat-bubble.ai .bubble-content { background:#f3f4f6; border-radius:2px 14px 14px 14px; padding:16px 18px; font-size:13.5px; line-height:1.85; color:#374151; }
+        .chat-bubble.ai .bubble-content .welcome-title { font-weight:600; font-size:15px; margin-bottom:8px; color:#1f2937; }
+        .chat-bubble.user { display:flex; justify-content:flex-end; }
+        .chat-bubble.user .bubble-content { background:linear-gradient(135deg,#6366f1,#818cf8); color:#fff; border-radius:14px 2px 14px 14px; padding:12px 18px; font-size:13.5px; line-height:1.7; }
+
+        .quick-ask { display:inline-block; margin-top:12px; padding:8px 16px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:10px; font-size:13px; color:#4f46e5; cursor:pointer; transition:all .15s; }
+        .quick-ask:hover { background:#e0e7ff; border-color:#a5b4fc; }
+
+        /* 项目选择卡片 */
+        .project-select { margin-top:14px; }
+        .project-option { padding:12px 16px; border:1.5px solid #e5e7eb; border-radius:10px; margin-bottom:10px; cursor:pointer; transition:all .2s; font-size:13.5px; display:flex; align-items:center; gap:10px; }
+        .project-option:hover { border-color:#818cf8; background:#f5f3ff; }
+        .project-option.selected { border-color:#6366f1; background:#eef2ff; }
+        .project-option .po-radio { width:18px; height:18px; border:2px solid #d1d5db; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .15s; }
+        .project-option.selected .po-radio { border-color:#6366f1; }
+        .project-option .po-info { flex:1; }
+        .project-option .po-name { font-weight:500; color:#1f2937; }
+        .project-option .po-date { font-size:11px; color:#9ca3af; margin-top:3px; }
+
+        /* 输入区 */
+        .chat-input-area { padding:14px 20px; border-top:1px solid #e5e7eb; background:#fff; flex-shrink:0; }
+        .input-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+        .input-toolbar .tool-btn { font-size:15px; color:#9ca3af; cursor:pointer; padding:2px; transition:color .15s; }
+        .input-toolbar .tool-btn:hover { color:#6b7280; }
+        .chat-input-wrap { display:flex; align-items:flex-end; gap:10px; background:#f3f4f6; border-radius:12px; padding:10px 14px; }
+        .chat-input-wrap textarea { flex:1; border:none; background:transparent; resize:none; font-size:14px; font-family:inherit; line-height:1.5; color:#1f2937; outline:none; max-height:80px; }
+        .chat-input-wrap textarea::placeholder { color:#9ca3af; }
+        .send-btn { width:36px; height:36px; border-radius:10px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .25s; flex-shrink:0; }
+        .send-btn.disabled { background:#e5e7eb; cursor:not-allowed; }
+        .send-btn.active { background:linear-gradient(135deg,#818cf8,#a78bfa,#c084fc); cursor:pointer; box-shadow:0 3px 12px rgba(139,92,246,.35); }
+        .send-btn svg { width:18px; height:18px; }
+        .send-btn.disabled svg { fill:#9ca3af; }
+        .send-btn.active svg { fill:#fff; }
+        .send-btn.active:hover { transform:scale(1.08); box-shadow:0 4px 16px rgba(139,92,246,.45); }
+
+        /* 加载动画 */
+        .typing-indicator { display:flex; gap:5px; padding:6px 0; }
+        .typing-indicator span { width:8px; height:8px; background:#a5b4fc; border-radius:50%; animation:typing 1.2s infinite; }
+        .typing-indicator span:nth-child(2) { animation-delay:.2s; }
+        .typing-indicator span:nth-child(3) { animation-delay:.4s; }
+        @keyframes typing { 0%,60%,100% { transform:translateY(0); opacity:.4; } 30% { transform:translateY(-7px); opacity:1; } }
+
+        /* 报告生成中 Loading */
+        .generating-box { display:flex; align-items:center; gap:12px; padding:14px 0; }
+        .gen-spinner { width:22px; height:22px; border:3px solid #e0e7ff; border-top-color:#6366f1; border-radius:50%; animation:spin 1s linear infinite; flex-shrink:0; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .gen-text { font-size:13.5px; color:#6366f1; font-weight:500; }
+        .gen-sub { font-size:12px; color:#9ca3af; margin-top:2px; }
+
+        /* 跳转按钮 */
+        .report-link { display:inline-flex; align-items:center; gap:8px; margin-top:12px; padding:10px 20px; background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; border-radius:10px; font-size:14px; font-weight:500; cursor:pointer; transition:all .2s; text-decoration:none; }
+        .report-link:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(79,70,229,.3); }
+
+        /* 维度确认卡片 */
+        .dim-confirm { margin-top:14px; }
+        .dim-confirm-title { font-size:13px; font-weight:600; color:#1f2937; margin-bottom:10px; }
+        .dim-list { display:flex; flex-direction:column; gap:6px; }
+        .dim-item { display:flex; align-items:center; gap:10px; padding:10px 14px; border:1px solid #e5e7eb; border-radius:8px; font-size:13px; color:#374151; transition:all .15s; }
+        .dim-item:hover { border-color:#c7d2fe; background:#fafafe; }
+        .dim-item .dim-check { width:18px; height:18px; border:2px solid #6366f1; border-radius:4px; display:flex; align-items:center; justify-content:center; flex-shrink:0; background:#eef2ff; }
+        .dim-item .dim-check svg { width:12px; height:12px; }
+        .dim-item .dim-label { flex:1; font-weight:500; }
+        .dim-item .dim-desc { font-size:11.5px; color:#9ca3af; }
+        .dim-section-label { font-size:12px; color:#6b7280; font-weight:500; margin-top:10px; margin-bottom:2px; padding-left:2px; }
+        .dim-section-label:first-child { margin-top:0; }
+
+        /* AI学习助手占位 */
+        .learn-placeholder { flex:1; display:flex; align-items:center; justify-content:center; color:#9ca3af; font-size:14px; }
+    </style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top-bar">
+    <div class="logo"><div class="dot"></div>mooc</div>
+    <div class="breadcrumb">学习管理 &gt; <span>项目管理</span></div>
+    <div class="right-actions">
+        <button class="ai-trigger" id="openAI">✨ AI Family</button>
+    </div>
+</div>
+
+<!-- 主布局 -->
+<div class="main-layout">
+    <!-- 左侧导航 -->
+    <div class="sidebar">
+        <div class="nav-group">
+            <div class="nav-item"><span class="nav-icon">🏠</span>首页</div>
+        </div>
+        <div class="nav-group">
+            <div class="nav-group-label">学习管理</div>
+            <div class="nav-item active"><span class="nav-icon">📋</span>项目管理</div>
+            <div class="nav-item"><span class="nav-icon">🗺</span>学习地图</div>
+            <div class="nav-item"><span class="nav-icon">📚</span>课程管理</div>
+            <div class="nav-item"><span class="nav-icon">📄</span>考试管理</div>
+            <div class="nav-item"><span class="nav-icon">🤖</span>AI陪练</div>
+            <div class="nav-item"><span class="nav-icon">📝</span>作业管理</div>
+            <div class="nav-item"><span class="nav-icon">📊</span>问卷管理</div>
+        </div>
+        <div class="nav-group">
+            <div class="nav-group-label">人员管理</div>
+            <div class="nav-item"><span class="nav-icon">👥</span>人员管理</div>
+            <div class="nav-item"><span class="nav-icon">🏢</span>组织架构</div>
+        </div>
+        <div class="nav-group">
+            <div class="nav-group-label">数据统计</div>
+            <div class="nav-item"><span class="nav-icon">📈</span>数据中心</div>
+        </div>
+    </div>
+
+    <!-- 中间空白区 -->
+    <div class="content-area">
+        <div class="content-placeholder">
+            <div class="ph-icon">📋</div>
+            <p>请从左侧选择功能模块</p>
+            <div class="ph-hint">或点击右上角 AI Family 获取智能助手支持</div>
+        </div>
+    </div>
+</div>
+
+<!-- 遮罩 -->
+<div class="ai-overlay" id="aiOverlay"></div>
+
+<!-- 右侧 AI 抽屉 -->
+<div class="ai-drawer" id="aiDrawer">
+
+    <!-- 左侧竖向 Tab 栏 -->
+    <div class="ai-tab-rail">
+        <div class="rail-header">
+            <div class="rail-logo">✨</div>
+            <div class="rail-title">AI Family</div>
+        </div>
+        <div class="tab-list">
+            <div class="ai-tab" data-tab="learn">
+                <span class="tab-icon">📚</span>AI 学习助手
+            </div>
+            <div class="ai-tab active" data-tab="train">
+                <span class="tab-icon">📊</span>培训助手
+            </div>
+        </div>
+    </div>
+
+    <!-- 右侧内容区 -->
+    <div class="ai-content">
+        <div class="ai-content-header">
+            <div class="content-title" id="contentTitle">培训助手</div>
+            <button class="close-btn" id="closeAI">✕</button>
+        </div>
+
+        <!-- 培训助手对话区 -->
+        <div class="chat-area" id="chatArea">
+            <div class="chat-messages" id="chatMessages">
+                <!-- AI 名片 -->
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+                    <div style="width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;">🤖</div>
+                    <div>
+                        <div style="font-size:15px; font-weight:600; color:#1f2937;">Mr. Der</div>
+                        <div style="font-size:12px; color:#9ca3af;">AI 培训助手</div>
+                    </div>
+                </div>
+
+                <!-- 欢迎消息 -->
+                <div class="chat-bubble ai">
+                    <div class="avatar">🤖</div>
+                    <div class="bubble-content">
+                        <div class="welcome-title">你好，我是你的培训助手 👋</div>
+                        <p>我可以帮助你解决培训管理过程中的各种问题。目前支持的能力包括：</p>
+                        <p style="margin-top:8px;">📊 <strong>培训项目运营洞察</strong> — 自动生成项目报告，覆盖日程、考试、作业、AI陪练、管理者演练、学员分析等多个维度</p>
+                        <p style="margin-top:8px;">你可以试着问我：</p>
+                        <div class="quick-ask" id="quickAsk">💬 帮我生成管理者培训项目报告</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 输入区 -->
+            <div class="chat-input-area">
+                <div class="input-toolbar">
+                    <span class="tool-btn">📎</span>
+                    <span class="tool-btn" style="font-size:13px; font-weight:500;">深度搜索</span>
+                    <span style="flex:1;"></span>
+                    <span class="tool-btn" style="font-size:12px; color:#c7d2fe;">✦ 全部AI对话</span>
+                </div>
+                <div class="chat-input-wrap">
+                    <textarea id="chatInput" rows="1" placeholder="问我任何问题..."></textarea>
+                    <button class="send-btn disabled" id="sendBtn" disabled>
+                        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI学习助手占位 -->
+        <div class="chat-area" id="learnArea" style="display:none;">
+            <div class="learn-placeholder">
+                <div style="text-align:center;">
+                    <div style="font-size:44px; margin-bottom:14px;">📚</div>
+                    <p>AI 学习助手</p>
+                    <p style="font-size:12px; margin-top:6px;">为学员提供个性化学习辅导</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatMessages = document.getElementById('chatMessages');
+    const quickAsk = document.getElementById('quickAsk');
+    const aiDrawer = document.getElementById('aiDrawer');
+    const aiOverlay = document.getElementById('aiOverlay');
+    const contentTitle = document.getElementById('contentTitle');
+
+    const tabTitles = { learn: 'AI 学习助手', train: '培训助手' };
+
+    // ===== 对话状态机 =====
+    // idle → projectSelect → dimConfirm → generating → done
+    let chatState = 'idle';
+    let selectedProjectName = '';
+    let selectedProjectIsTarget = false;
+
+    // ===== 抽屉开关 =====
+    function openDrawer() { aiDrawer.classList.add('open'); aiOverlay.classList.add('show'); }
+    function closeDrawer() { aiDrawer.classList.remove('open'); aiOverlay.classList.remove('show'); }
+    document.getElementById('openAI').addEventListener('click', openDrawer);
+    document.getElementById('closeAI').addEventListener('click', closeDrawer);
+    aiOverlay.addEventListener('click', closeDrawer);
+    setTimeout(openDrawer, 400);
+
+    // ===== Tab 切换（左侧竖向） =====
+    document.querySelectorAll('.ai-tab-rail .ai-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.ai-tab-rail .ai-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            const target = tab.dataset.tab;
+            contentTitle.textContent = tabTitles[target] || '';
+            document.getElementById('chatArea').style.display = target === 'train' ? 'flex' : 'none';
+            document.getElementById('learnArea').style.display = target === 'learn' ? 'flex' : 'none';
+        });
+    });
+
+    // ===== 输入检测 =====
+    chatInput.addEventListener('input', () => {
+        const text = chatInput.value.trim();
+        if (text.length > 0) {
+            sendBtn.classList.remove('disabled'); sendBtn.classList.add('active'); sendBtn.disabled = false;
+        } else {
+            sendBtn.classList.add('disabled'); sendBtn.classList.remove('active'); sendBtn.disabled = true;
+        }
+        chatInput.style.height = 'auto';
+        chatInput.style.height = Math.min(chatInput.scrollHeight, 80) + 'px';
+    });
+
+    // ===== 快捷提问 =====
+    quickAsk.addEventListener('click', () => {
+        chatInput.value = '帮我生成管理者培训项目报告';
+        chatInput.dispatchEvent(new Event('input'));
+        chatInput.focus();
+    });
+
+    // ===== 发送消息 =====
+    sendBtn.addEventListener('click', handleSend);
+    chatInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!sendBtn.disabled) handleSend(); }
+    });
+
+    function handleSend() {
+        const text = chatInput.value.trim();
+        if (!text) return;
+        appendUserBubble(text);
+        chatInput.value = '';
+        chatInput.dispatchEvent(new Event('input'));
+
+        // 状态机路由
+        switch (chatState) {
+            case 'dimConfirm':
+                handleDimConfirmReply(text);
+                break;
+            case 'projectSelect':
+            case 'generating':
+            case 'done':
+                // 这些状态下忽略用户自由输入，或给出引导
+                break;
+            default:
+                if (text.includes('管理者')) {
+                    chatState = 'projectSelect';
+                    showTypingThenReply(() => showProjectSelection(), 1000);
+                } else {
+                    showTypingThenReply(() => {
+                        appendAIBubble('抱歉，我暂时只支持培训项目运营洞察类问题。你可以试试问我：<br><div class="quick-ask" onclick="document.getElementById(\'quickAsk\').click()">💬 帮我生成管理者培训项目报告</div>');
+                    }, 800);
+                }
+        }
+    }
+
+    // ===== 维度确认回复处理 =====
+    function handleDimConfirmReply(text) {
+        const normalized = text.replace(/\s/g, '');
+        if (normalized === '确认' || normalized === '确认生成' || normalized === '好的' || normalized === '可以' || normalized === '没问题') {
+            showTypingThenReply(() => startGenerating(), 800);
+        } else if (normalized === '调整' || normalized === '修改维度') {
+            showTypingThenReply(() => {
+                appendAIBubble(`<p>好的，请告诉我你希望如何调整报告维度：</p>
+                <p style="margin-top:6px; font-size:13px; color:#6b7280;">你可以直接告诉我需要增减或替换哪些维度，例如：</p>
+                <div style="margin-top:8px; padding:10px 14px; background:#f3f4f6; border-radius:8px; font-size:12.5px; color:#374151; line-height:1.8;">
+                    · "去掉满意度评估"<br>
+                    · "增加考试洞察和作业洞察"<br>
+                    · "只保留统计概览、日程安排、学员分析"<br>
+                    · "全部保留，额外加上AI陪练分析"
+                </div>`);
+            }, 600);
+        } else {
+            showTypingThenReply(() => {
+                appendAIBubble(`<p>请回复 <strong>「确认」</strong> 开始生成报告，或回复 <strong>「调整」</strong> 修改报告维度。</p>`);
+            }, 500);
+        }
+    }
+
+    // ===== 开始生成报告 =====
+    function startGenerating() {
+        chatState = 'generating';
+        const loadingBubble = appendAIBubble(`
+            <div class="generating-box">
+                <div class="gen-spinner"></div>
+                <div>
+                    <div class="gen-text">报告生成中...</div>
+                    <div class="gen-sub">正在分析项目数据，请稍候</div>
+                </div>
+            </div>`);
+        setTimeout(() => {
+            loadingBubble.remove();
+            if (selectedProjectIsTarget) {
+                chatState = 'done';
+                appendAIBubble(`<p>✅ <strong>${selectedProjectName}</strong> 报告已生成完毕！</p>
+                <p style="margin-top:8px; color:#6b7280; font-size:12.5px;">报告已按确认维度生成，包含：统计概览、日程安排与洞察、部门完成情况、学员综合分析、满意度评估及费用信息。</p>
+                <a class="report-link" href="training-project-report.html" target="_blank">📊 查看项目报告 →</a>`);
+            } else {
+                chatState = 'idle';
+                appendAIBubble(`<p>抱歉，该项目暂无完整数据，无法生成报告。</p><p style="margin-top:4px;">请选择 <strong>「2026年新晋管理者领航计划」</strong> 查看示例报告。</p>`);
+                projectSelected = false;
+                document.querySelectorAll('.project-option').forEach(opt => {
+                    opt.style.opacity = ''; opt.style.pointerEvents = '';
+                    opt.classList.remove('selected');
+                    opt.querySelector('.po-radio').innerHTML = '';
+                    opt.querySelector('.po-radio').style.borderColor = '#d1d5db';
+                });
+            }
+        }, 3000);
+    }
+
+    // ===== 气泡工具函数 =====
+    function appendUserBubble(text) {
+        const div = document.createElement('div');
+        div.className = 'chat-bubble user';
+        div.innerHTML = `<div class="bubble-content">${escapeHtml(text)}</div>`;
+        chatMessages.appendChild(div);
+        scrollToBottom();
+    }
+    function appendAIBubble(html) {
+        const div = document.createElement('div');
+        div.className = 'chat-bubble ai';
+        div.innerHTML = `<div class="avatar">🤖</div><div class="bubble-content">${html}</div>`;
+        chatMessages.appendChild(div);
+        scrollToBottom();
+        return div;
+    }
+    function showTypingThenReply(callback, delay) {
+        const typing = document.createElement('div');
+        typing.className = 'chat-bubble ai';
+        typing.innerHTML = `<div class="avatar">🤖</div><div class="bubble-content"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
+        chatMessages.appendChild(typing);
+        scrollToBottom();
+        setTimeout(() => { typing.remove(); callback(); }, delay || 1000);
+    }
+
+    // ===== 项目选择 =====
+    function showProjectSelection() {
+        const projects = [
+            { name: '2026年新晋管理者领航计划', date: '2026.03.01 — 2026.04.30', status: '已结束', isTarget: true },
+            { name: '2025年中层管理者精进营', date: '2025.09.01 — 2025.11.15', status: '已结束', isTarget: false },
+            { name: '2026年储备管理者训练营', date: '2026.06.01 — 2026.07.31', status: '进行中', isTarget: false }
+        ];
+        let html = `<p>我识别到包含 <strong>"管理者"</strong> 关键词的培训项目共 <strong>3</strong> 个，请选择你要生成报告的项目：</p><div class="project-select">`;
+        projects.forEach((p, i) => {
+            html += `<div class="project-option" data-idx="${i}" data-target="${p.isTarget}" data-name="${p.name}" onclick="selectProject(this, ${p.isTarget}, '${p.name}')">
+                <div class="po-radio"></div>
+                <div class="po-info">
+                    <div class="po-name">${p.name}</div>
+                    <div class="po-date">${p.date} · ${p.status}</div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+        appendAIBubble(html);
+    }
+
+    let projectSelected = false;
+    window.selectProject = function(el, isTarget, name) {
+        if (projectSelected) return;
+        el.closest('.project-select').querySelectorAll('.project-option').forEach(opt => {
+            opt.classList.remove('selected');
+            opt.querySelector('.po-radio').innerHTML = '';
+            opt.querySelector('.po-radio').style.borderColor = '#d1d5db';
+        });
+        el.classList.add('selected');
+        const radio = el.querySelector('.po-radio');
+        radio.style.borderColor = '#6366f1';
+        radio.innerHTML = '<div style="width:9px;height:9px;border-radius:50%;background:#6366f1;"></div>';
+        projectSelected = true;
+        el.closest('.project-select').querySelectorAll('.project-option').forEach(opt => {
+            if (opt !== el) { opt.style.opacity = '0.45'; opt.style.pointerEvents = 'none'; }
+        });
+
+        selectedProjectName = name;
+        selectedProjectIsTarget = isTarget;
+
+        setTimeout(() => {
+            if (isTarget) {
+                chatState = 'dimConfirm';
+                showDimensionConfirmation();
+            } else {
+                showTypingThenReply(() => {
+                    appendAIBubble(`<p>抱歉，该项目暂无完整数据，无法生成报告。</p><p style="margin-top:4px;">请选择 <strong>「2026年新晋管理者领航计划」</strong> 查看示例报告。</p>`);
+                    projectSelected = false;
+                    chatState = 'projectSelect';
+                    document.querySelectorAll('.project-option').forEach(opt => {
+                        opt.style.opacity = ''; opt.style.pointerEvents = '';
+                        opt.classList.remove('selected');
+                        opt.querySelector('.po-radio').innerHTML = '';
+                        opt.querySelector('.po-radio').style.borderColor = '#d1d5db';
+                    });
+                }, 600);
+            }
+        }, 400);
+    };
+
+    // ===== 维度确认 =====
+    function showDimensionConfirmation() {
+        const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+        let html = `<p>已选择 <strong>${selectedProjectName}</strong>，接下来请确认本次报告包含的数据维度：</p>`;
+        html += '<div class="dim-confirm">';
+
+        // 固定维度
+        html += '<div class="dim-section-label">核心维度</div>';
+        html += '<div class="dim-list">';
+        const fixedDims = [
+            { label: '统计概览', desc: '参训人数、毕业率、日程通过率、人均学习时长、满意度评分' },
+            { label: '日程安排情况', desc: '各阶段日程类型、选必修、时间、完成率、通过率明细' },
+            { label: '具体日程详情', desc: '每个日程的应学/完成人数、完成率、通过率及备注' },
+            { label: '日程洞察', desc: '必修/选修参与度分析、面授出勤瓶颈识别、改进建议' },
+        ];
+        fixedDims.forEach(d => {
+            html += `<div class="dim-item">
+                <div class="dim-check">${checkSvg}</div>
+                <div>
+                    <div class="dim-label">${d.label}</div>
+                    <div class="dim-desc">${d.desc}</div>
+                </div>
+            </div>`;
+        });
+        html += '</div>';
+
+        // 确认引导
+        html += `<p style="margin-top:14px; font-size:13.5px; color:#374151;">是否确认生成报告，或者你可以告诉我你想要的其他的统计维度，例如：<span style="color:#6366f1; font-weight:500;">增加费用明细统计</span></p>`;
+
+        appendAIBubble(html);
+    }
+
+    function scrollToBottom() { requestAnimationFrame(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }); }
+    function escapeHtml(text) { const d = document.createElement('div'); d.textContent = text; return d.innerHTML; }
+</script>
+</body>
+</html>

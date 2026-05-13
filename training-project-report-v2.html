@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>培训项目报告 - 2026年新晋管理者领航计划</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #1a56db;
+            --primary-light: #e8f0fe;
+            --success: #059669;
+            --success-light: #dcfce7;
+            --warning: #d97706;
+            --warning-light: #fef3c7;
+            --danger: #dc2626;
+            --danger-light: #fee2e2;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-900: #111827;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.6;
+        }
+        .report-container { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+
+        /* ===== 顶部报告Header ===== */
+        .report-header {
+            background: linear-gradient(135deg, #1a56db 0%, #1e40af 50%, #1e3a8a 100%);
+            border-radius: 16px;
+            padding: 48px;
+            color: white;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .report-header::before { content:''; position:absolute; top:-50%; right:-15%; width:400px; height:400px; border-radius:50%; background:rgba(255,255,255,0.04); }
+        .header-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px; }
+        .header-top h1 { font-size:28px; font-weight:700; }
+        .header-top .report-badge { background:rgba(255,255,255,0.15); padding:6px 16px; border-radius:20px; font-size:13px; }
+        .header-subtitle { font-size:15px; opacity:0.85; margin-bottom:28px; max-width:800px; }
+        .header-meta-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px 24px; background:rgba(255,255,255,0.08); border-radius:10px; padding:20px 24px; }
+        .header-meta-item { display:flex; align-items:center; gap:8px; font-size:14px; }
+        .header-meta-item .label { opacity:0.7; min-width:65px; }
+        .header-meta-item .value { font-weight:500; }
+
+        /* ===== 概览卡片 ===== */
+        .overview-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:14px; margin-bottom:32px; }
+        .stat-card { background:white; border-radius:12px; padding:18px 14px; box-shadow:var(--shadow); text-align:center; border-top:3px solid transparent; }
+        .stat-card .stat-value { font-size:26px; font-weight:700; color:var(--primary); }
+        .stat-card .stat-label { font-size:12px; color:var(--gray-500); margin-top:3px; }
+        .stat-card.green { border-top-color:var(--success); } .stat-card.green .stat-value { color:var(--success); }
+        .stat-card.blue { border-top-color:var(--primary); } .stat-card.blue .stat-value { color:var(--primary); }
+        .stat-card.yellow { border-top-color:var(--warning); } .stat-card.yellow .stat-value { color:var(--warning); }
+
+        /* ===== 可折叠section ===== */
+        .collapsible-section {
+            background:white;
+            border-radius:12px;
+            margin-bottom:24px;
+            box-shadow:var(--shadow);
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding:20px 32px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            cursor:pointer;
+            user-select:none;
+            border-bottom:2px solid var(--primary-light);
+            transition:all 0.3s ease;
+            font-weight:600;
+            font-size:18px;
+            color:var(--gray-900);
+        }
+
+        .section-header:hover { background:var(--gray-50); }
+        .section-header .header-left { display:flex; align-items:center; gap:10px; }
+        .section-header .header-icon {
+            width:30px;
+            height:30px;
+            background:var(--primary-light);
+            border-radius:8px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:15px;
+        }
+
+        .toggle-btn {
+            width:32px;
+            height:32px;
+            border-radius:8px;
+            border:none;
+            background:var(--gray-100);
+            color:var(--gray-600);
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:18px;
+            transition:all 0.3s ease;
+        }
+        .toggle-btn:hover { background:var(--gray-200); color:var(--gray-900); }
+        .toggle-btn.expanded { transform:rotate(180deg); }
+
+        .section-content {
+            padding:32px;
+            display:block;
+            animation:slideDown 0.3s ease;
+        }
+        .section-content.collapsed { display:none; }
+        @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:translateY(0); } }
+
+        /* ===== 通用样式 ===== */
+        .section-title {
+            font-size:16px;
+            font-weight:600;
+            color:var(--gray-900);
+            margin-bottom:16px;
+            padding-bottom:10px;
+            border-bottom:2px solid var(--primary-light);
+            display:flex;
+            align-items:center;
+            gap:8px;
+        }
+        .section-title .icon {
+            width:24px;
+            height:24px;
+            background:var(--primary-light);
+            border-radius:6px;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:13px;
+        }
+
+        .subsection { margin-bottom:24px; }
+        .subsection-title { font-size:15px; font-weight:600; color:var(--gray-900); margin-bottom:12px; }
+
+        /* ===== 表格 ===== */
+        .table-wrapper { overflow-x:auto; margin-bottom:20px; }
+        .data-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .data-table th { background:var(--gray-50); padding:10px 12px; text-align:left; font-weight:600; color:var(--gray-700); border-bottom:2px solid var(--gray-200); white-space:nowrap; }
+        .data-table td { padding:10px 12px; border-bottom:1px solid var(--gray-100); color:var(--gray-700); }
+        .data-table tr:hover td { background:var(--gray-50); }
+        .data-table .text-center { text-align:center; }
+
+        /* ===== 标签 ===== */
+        .tag { display:inline-block; padding:2px 9px; border-radius:12px; font-size:11px; font-weight:500; }
+        .tag-blue { background:#dbeafe; color:#1d4ed8; }
+        .tag-green { background:#dcfce7; color:#15803d; }
+        .tag-yellow { background:#fef3c7; color:#92400e; }
+        .tag-purple { background:#f3e8ff; color:#6b21a8; }
+
+        /* ===== 学员/部门卡片 ===== */
+        .student-card { display:flex; align-items:center; gap:12px; padding:12px 14px; border-radius:8px; margin-bottom:8px; background:var(--gray-50); }
+        .rank-badge { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:12px; flex-shrink:0; }
+        .student-info { flex:1; }
+        .student-name { font-weight:600; font-size:14px; }
+        .student-dept { font-size:12px; color:var(--gray-500); }
+        .student-score { font-size:20px; font-weight:700; }
+
+        .top-list .student-card:nth-child(1) .rank-badge { background:#fef3c7; color:#92400e; }
+        .top-list .student-card:nth-child(2) .rank-badge { background:#e5e7eb; color:#374151; }
+        .top-list .student-card:nth-child(3) .rank-badge { background:#fed7aa; color:#9a3412; }
+        .top-list .student-card .student-score { color:var(--success); }
+        .bottom-list .student-card .rank-badge { background:var(--danger-light); color:var(--danger); }
+        .bottom-list .student-card .student-score { color:var(--danger); }
+
+        /* ===== 部门进度条 ===== */
+        .dept-progress-item { display:flex; align-items:center; padding:10px 0; border-bottom:1px solid var(--gray-100); }
+        .dept-progress-item:last-child { border-bottom:none; }
+        .dept-name { width:120px; font-size:13px; font-weight:500; color:var(--gray-700); flex-shrink:0; }
+        .dept-bar-wrap { flex:1; margin:0 14px; height:20px; background:var(--gray-100); border-radius:10px; overflow:hidden; }
+        .dept-bar-fill { height:100%; border-radius:10px; }
+        .dept-bar-fill.excellent { background:linear-gradient(90deg,#34d399,#059669); }
+        .dept-bar-fill.standard { background:linear-gradient(90deg,#60a5fa,#2563eb); }
+        .dept-bar-fill.attention { background:linear-gradient(90deg,#fbbf24,#d97706); }
+        .dept-percentage { width:50px; text-align:right; font-weight:700; font-size:13px; flex-shrink:0; }
+        .dept-rating { width:45px; text-align:center; flex-shrink:0; font-size:11px; font-weight:600; padding:2px 6px; border-radius:4px; margin-left:8px; }
+        .rating-excellent { background:var(--success-light); color:var(--success); }
+        .rating-standard { background:#dbeafe; color:#1d4ed8; }
+        .rating-attention { background:var(--warning-light); color:var(--warning); }
+
+        /* ===== 洞察卡片 ===== */
+        .insight-box { margin-top:16px; padding:16px 20px; border-radius:10px; border-left:4px solid; font-size:13px; line-height:1.8; }
+        .insight-box.good { border-left-color:var(--success); background:#f0fdf4; }
+        .insight-box.warn { border-left-color:var(--warning); background:#fffbeb; }
+        .insight-box.bad { border-left-color:var(--danger); background:#fef2f2; }
+        .insight-box.info { border-left-color:var(--primary); background:#eff6ff; }
+        .insight-box .insight-title { font-weight:600; margin-bottom:6px; font-size:14px; }
+        .insight-box p { color:var(--gray-700); }
+
+        .insight-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px; margin-top:16px; }
+
+        /* ===== 评分显示 ===== */
+        .score-display { display:flex; align-items:center; gap:12px; padding:12px; background:var(--gray-50); border-radius:8px; }
+        .score-display .score-num { font-size:28px; font-weight:700; color:var(--primary); }
+        .score-display .score-label { font-size:13px; color:var(--gray-600); }
+
+        /* ===== 页脚 ===== */
+        .report-footer { text-align:center; padding:32px; color:var(--gray-500); font-size:13px; }
+
+        /* ===== 响应式 ===== */
+        @media (max-width:768px) {
+            .header-meta-grid { grid-template-columns:1fr; }
+            .overview-grid { grid-template-columns:repeat(2,1fr); }
+            .insight-grid { grid-template-columns:1fr; }
+            .section-content { padding:16px; }
+        }
+    </style>
+</head>
+<body>
+<div class="report-container">
+
+    <!-- 顶部：项目基本信息 -->
+    <div class="report-header">
+        <div class="header-top">
+            <h1>2026年新晋管理者领航计划</h1>
+            <span class="report-badge">📊 分析报告</span>
+        </div>
+        <p class="header-subtitle">面向近一年内新晋升为管理岗位的员工，通过系统化培训帮助其快速完成角色转型，提升团队管理能力、决策力与领导力，为公司储备中层管理人才。</p>
+        <div class="header-meta-grid">
+            <div class="header-meta-item"><span class="label">项目周期</span><span class="value">2026.03.01 — 2026.04.30（61天）</span></div>
+            <div class="header-meta-item"><span class="label">参训地点</span><span class="value">总部3楼培训中心 / 线上平台</span></div>
+            <div class="header-meta-item"><span class="label">班主任</span><span class="value">李思琪（人才发展部）</span></div>
+            <div class="header-meta-item"><span class="label">参训人数</span><span class="value">正式 45 人 / 旁听 3 人</span></div>
+            <div class="header-meta-item"><span class="label">毕业条件</span><span class="value">必修完成 + 考试≥70 + 出勤≥90%</span></div>
+            <div class="header-meta-item"><span class="label">报告日期</span><span class="value">2026年5月11日</span></div>
+        </div>
+    </div>
+
+    <!-- 培训概览 -->
+    <div class="overview-grid">
+        <div class="stat-card blue"><div class="stat-value">48</div><div class="stat-label">参训学员</div></div>
+        <div class="stat-card green"><div class="stat-value">87.5%</div><div class="stat-label">毕业率</div></div>
+        <div class="stat-card green"><div class="stat-value">91.6%</div><div class="stat-label">日程通过率</div></div>
+        <div class="stat-card blue"><div class="stat-value">2,460</div><div class="stat-label">人均学习时长(min)</div></div>
+        <div class="stat-card green"><div class="stat-value">4.6</div><div class="stat-label">满意度评分</div></div>
+    </div>
+
+    <!-- ========== 模块1：日程安排情况 ========== -->
+    <div class="collapsible-section" id="section-schedule">
+        <div class="section-header" onclick="toggleSection('schedule')">
+            <div class="header-left">
+                <div class="header-icon">📅</div>
+                <span>日程安排情况</span>
+            </div>
+            <button class="toggle-btn expanded" id="toggle-schedule">▼</button>
+        </div>
+
+        <div class="section-content">
+            <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px;">
+                <div style="text-align:center; padding:14px; background:var(--primary-light); border-radius:8px;">
+                    <div style="font-size:22px; font-weight:700; color:var(--primary);">14</div>
+                    <div style="font-size:12px; color:var(--gray-500); margin-top:2px;">日程总数</div>
+                </div>
+                <div style="text-align:center; padding:14px; background:var(--success-light); border-radius:8px;">
+                    <div style="font-size:22px; font-weight:700; color:var(--success);">95.2%</div>
+                    <div style="font-size:12px; color:var(--gray-500); margin-top:2px;">必修完成率</div>
+                </div>
+                <div style="text-align:center; padding:14px; background:var(--warning-light); border-radius:8px;">
+                    <div style="font-size:22px; font-weight:700; color:var(--warning);">84.4%</div>
+                    <div style="font-size:12px; color:var(--gray-500); margin-top:2px;">选修完成率</div>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr><th>阶段</th><th>日程名称</th><th>类型</th><th>选必修</th><th>时间</th><th>完成情况</th><th>通过率</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td rowspan="4" style="vertical-align:middle; font-weight:600; background:#f0f9ff; text-align:center;">阶段一<br><span style="font-size:11px; color:var(--gray-500);">认知期</span></td><td>管理者角色认知</td><td><span class="tag tag-blue">在线课程</span></td><td><span class="tag tag-purple">必修</span></td><td>3/1-3/7</td><td class="text-center">45/45</td><td class="text-center">97.8%</td></tr>
+                        <tr><td>情境领导力</td><td><span class="tag tag-blue">在线课程</span></td><td><span class="tag" style="background:#f3f4f6; color:#374151;">选修</span></td><td>3/8-4/30</td><td class="text-center">38/45</td><td class="text-center">80.0%</td></tr>
+                        <tr><td>高效沟通与冲突管理</td><td><span class="tag tag-green">面授课程</span></td><td><span class="tag tag-purple">必修</span></td><td>3/10</td><td class="text-center">42/45</td><td class="text-center">93.3%</td></tr>
+                        <tr><td>团队目标设定与OKR</td><td><span class="tag tag-green">面授课程</span></td><td><span class="tag tag-purple">必修</span></td><td>3/17</td><td class="text-center">43/45</td><td class="text-center">95.6%</td></tr>
+                        <tr><td rowspan="4" style="vertical-align:middle; font-weight:600; background:#f0fdf4; text-align:center;">阶段二<br><span style="font-size:11px; color:var(--gray-500);">实践期</span></td><td>管理能力在线考试</td><td><span class="tag tag-yellow">在线考试</span></td><td><span class="tag tag-purple">必修</span></td><td>3/24</td><td class="text-center">45/45</td><td class="text-center">91.1%</td></tr>
+                        <tr><td>管理案例分析</td><td><span class="tag" style="background:#ffedd5; color:#9a3412;">作业</span></td><td><span class="tag tag-purple">必修</span></td><td>3/25-4/5</td><td class="text-center">44/45</td><td class="text-center">93.3%</td></tr>
+                        <tr><td>绩效面谈AI模拟</td><td><span class="tag tag-blue">AI陪练</span></td><td><span class="tag tag-purple">必修</span></td><td>4/1-4/15</td><td class="text-center">43/45</td><td class="text-center">88.9%</td></tr>
+                        <tr><td>管理者综合演练</td><td><span class="tag" style="background:#fee2e2; color:#991b1b;">管理者演练</span></td><td><span class="tag tag-purple">必修</span></td><td>4/12-4/18</td><td class="text-center">44/45</td><td class="text-center">91.1%</td></tr>
+                        <tr><td rowspan="4" style="vertical-align:middle; font-weight:600; background:#fefce8; text-align:center;">阶段三<br><span style="font-size:11px; color:var(--gray-500);">考核期</span></td><td>领导力直播工作坊</td><td><span class="tag" style="background:#cffafe; color:#0e7490;">直播</span></td><td><span class="tag tag-purple">必修</span></td><td>4/8</td><td class="text-center">43/45</td><td class="text-center">95.6%</td></tr>
+                        <tr><td>导师一对一辅导</td><td><span class="tag tag-green">辅导</span></td><td><span class="tag tag-purple">必修</span></td><td>4/10-4/20</td><td class="text-center">42/45</td><td class="text-center">93.3%</td></tr>
+                        <tr><td>管理能力鉴定</td><td><span class="tag" style="background:#f3e8ff; color:#6b21a8;">鉴定</span></td><td><span class="tag tag-purple">必修</span></td><td>4/22</td><td class="text-center">45/45</td><td class="text-center">93.3%</td></tr>
+                        <tr><td>培训满意度调查</td><td><span class="tag" style="background:#f3f4f6; color:#374151;">问卷</span></td><td><span class="tag" style="background:#f3f4f6; color:#374151;">选修</span></td><td>4/25-4/30</td><td class="text-center">41/48</td><td class="text-center">—</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 模块2：数据分析 ========== -->
+    <div class="collapsible-section" id="section-analysis">
+        <div class="section-header" onclick="toggleSection('analysis')">
+            <div class="header-left">
+                <div class="header-icon">📊</div>
+                <span>数据分析</span>
+            </div>
+            <button class="toggle-btn" id="toggle-analysis">▶</button>
+        </div>
+
+        <div class="section-content collapsed">
+            <!-- 子块1：学员维度学习行为分析 -->
+            <div class="subsection">
+                <div class="subsection-title">📌 学员维度学习行为分析</div>
+                <p style="font-size:13px; color:var(--gray-600); margin-bottom:16px;">综合评分 = 毕业(0-5) + 任务完成(0-10) + 考核成绩(0-10) + 项目成绩(0-10) + 学习积极性(0-10) + 学习时长(0-10) + 出勤(0-10) + 评价(0-10) + 考勤(0-10) + 积分(0-5) + 证书(0-5) + 请假(0-5)，满分100分。</p>
+
+                <!-- TOP 5学员 -->
+                <div style="margin-bottom:24px;">
+                    <div class="rank-section-title" style="color:var(--success); margin-bottom:14px; display:flex; align-items:center; gap:8px;"><span>🥇 最优学员 TOP 5</span></div>
+                    <div class="top-list">
+                        <div class="student-card">
+                            <span class="rank-badge" style="background:#fef3c7; color:#92400e;">1</span>
+                            <div class="student-info">
+                                <div class="student-name">李娜</div>
+                                <div class="student-dept">技术部 · 技术主管</div>
+                            </div>
+                            <div class="student-score">96</div>
+                        </div>
+                        <div class="student-card">
+                            <span class="rank-badge" style="background:#e5e7eb; color:#374151;">2</span>
+                            <div class="student-info">
+                                <div class="student-name">张伟</div>
+                                <div class="student-dept">产品部 · 产品经理</div>
+                            </div>
+                            <div class="student-score">95</div>
+                        </div>
+                        <div class="student-card">
+                            <span class="rank-badge" style="background:#fed7aa; color:#9a3412;">3</span>
+                            <div class="student-info">
+                                <div class="student-name">黄芳</div>
+                                <div class="student-dept">技术部 · 前端负责人</div>
+                            </div>
+                            <div class="student-score">93</div>
+                        </div>
+                        <div class="student-card">
+                            <span class="rank-badge" style="background:var(--gray-100); color:var(--gray-500);">4</span>
+                            <div class="student-info">
+                                <div class="student-name">刘洋</div>
+                                <div class="student-dept">产品部 · 高级产品经理</div>
+                            </div>
+                            <div class="student-score">92</div>
+                        </div>
+                        <div class="student-card">
+                            <span class="rank-badge" style="background:var(--gray-100); color:var(--gray-500);">5</span>
+                            <div class="student-info">
+                                <div class="student-name">郑楠</div>
+                                <div class="student-dept">市场部 · 品牌经理</div>
+                            </div>
+                            <div class="student-score">91</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTTOM 5学员 -->
+                <div style="margin-bottom:24px;">
+                    <div class="rank-section-title" style="color:var(--danger); margin-bottom:14px; display:flex; align-items:center; gap:8px;"><span>⚠️ 待提升学员 BOTTOM 5</span></div>
+                    <div class="bottom-list">
+                        <div class="student-card">
+                            <span class="rank-badge">42</span>
+                            <div class="student-info">
+                                <div class="student-name">陈浩</div>
+                                <div class="student-dept">财务部 · 财务主管</div>
+                            </div>
+                            <div class="student-score">61</div>
+                        </div>
+                        <div class="student-card">
+                            <span class="rank-badge">41</span>
+                            <div class="student-info">
+                                <div class="student-name">马超</div>
+                                <div class="student-dept">运营部 · 运营主管</div>
+                            </div>
+                            <div class="student-score">66</div>
+                        </div>
+                        <div class="student-card">
+                            <span class="rank-badge">40</span>
+                            <div class="student-info">
+                                <div class="student-name">孙强</div>
+                                <div class="student-dept">销售部 · 客户经理</div>
+                            </div>
+                            <div class="student-score">68</div>
+                        </div>
+                        <div class="student-card">
+                            <span class="rank-badge">39</span>
+                            <div class="student-info">
+                                <div class="student-name">许丽</div>
+                                <div class="student-dept">财务部 · 成本会计主管</div>
+                            </div>
+                            <div class="student-score">70</div>
+                        </div>
+                        <div class="student-card">
+                            <span class="rank-badge">38</span>
+                            <div class="student-info">
+                                <div class="student-name">赵敏</div>
+                                <div class="student-dept">市场部 · 市场经理</div>
+                            </div>
+                            <div class="student-score">74</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOTTOM学员洞察 -->
+                <div class="insight-box info">
+                    <div class="insight-title">💡 BOTTOM学员问题分析与改进建议</div>
+                    <p><strong>主要问题：</strong></p>
+                    <p>BOTTOM 5学员（评分61-74分）普遍存在"开始学习滞后3-5天、考勤缺勤次数较多、学习时长不足"的问题。其中财务部学员（陈浩、许丽）尤其突出，出勤率不达标且请假次数超过3次。</p>
+                    <p style="margin-top:8px;"><strong>改进建议：</strong></p>
+                    <ul style="margin-top:6px; margin-left:20px;">
+                        <li>对BOTTOM学员设置前期学习提醒（项目开始后第1-3天触发）</li>
+                        <li>班主任安排1v1沟通，了解缺勤原因并制定弥补方案</li>
+                        <li>为出差频繁岗位（销售部）提供异步学习路径或补课机制</li>
+                        <li>设置学习进度预警机制：第2周完成率&lt;50%时自动触发干预</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 子块2：部门维度学习行为分析 -->
+            <div class="subsection" style="margin-top:32px; padding-top:24px; border-top:2px solid var(--gray-200);">
+                <div class="subsection-title">📍 部门维度学习行为分析</div>
+                <p style="font-size:13px; color:var(--gray-600); margin-bottom:16px;">综合打分规则（满分100分）：毕业情况(40%) + 学习积极性(20%) + 日程完成(20%) + 成绩情况(10%) + 出勤情况(10%)</p>
+
+                <div style="margin-bottom:20px;">
+                    <div class="dept-progress-item">
+                        <span class="dept-name">产品研发部</span>
+                        <div class="dept-bar-wrap"><div class="dept-bar-fill excellent" style="width:100%"></div></div>
+                        <span class="dept-percentage">89</span>
+                        <span class="dept-rating rating-excellent">优秀</span>
+                    </div>
+                    <div class="dept-progress-item">
+                        <span class="dept-name">技术部</span>
+                        <div class="dept-bar-wrap"><div class="dept-bar-fill excellent" style="width:95%"></div></div>
+                        <span class="dept-percentage">86</span>
+                        <span class="dept-rating rating-excellent">优秀</span>
+                    </div>
+                    <div class="dept-progress-item">
+                        <span class="dept-name">市场部</span>
+                        <div class="dept-bar-wrap"><div class="dept-bar-fill standard" style="width:78%"></div></div>
+                        <span class="dept-percentage">76</span>
+                        <span class="dept-rating rating-standard">达标</span>
+                    </div>
+                    <div class="dept-progress-item">
+                        <span class="dept-name">运营部</span>
+                        <div class="dept-bar-wrap"><div class="dept-bar-fill standard" style="width:72%"></div></div>
+                        <span class="dept-percentage">68</span>
+                        <span class="dept-rating rating-standard">达标</span>
+                    </div>
+                    <div class="dept-progress-item">
+                        <span class="dept-name">销售部</span>
+                        <div class="dept-bar-wrap"><div class="dept-bar-fill attention" style="width:58%"></div></div>
+                        <span class="dept-percentage">54</span>
+                        <span class="dept-rating rating-attention">关注</span>
+                    </div>
+                    <div class="dept-progress-item">
+                        <span class="dept-name">财务部</span>
+                        <div class="dept-bar-wrap"><div class="dept-bar-fill attention" style="width:45%"></div></div>
+                        <span class="dept-percentage">42</span>
+                        <span class="dept-rating rating-attention">关注</span>
+                    </div>
+                </div>
+
+                <div class="insight-grid">
+                    <div class="insight-box good">
+                        <div class="insight-title">✅ 产品研发部、技术部表现优秀</div>
+                        <p>两个部门学员毕业率均达100%，学习积极性高，建议在全公司范围内分享这两个部门的学习管理经验。</p>
+                    </div>
+                    <div class="insight-box warn">
+                        <div class="insight-title">⚠️ 销售部、财务部需重点关注</div>
+                        <p>两个部门得分最低（54分、42分），主要原因：业务出差频繁导致缺勤、请假人数多、学习时长不足。建议评估是否需要调整参训安排或提供异步学习方案。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 模块3：项目设计分析 ========== -->
+    <div class="collapsible-section" id="section-design">
+        <div class="section-header" onclick="toggleSection('design')">
+            <div class="header-left">
+                <div class="header-icon">🎨</div>
+                <span>项目设计分析</span>
+            </div>
+            <button class="toggle-btn" id="toggle-design">▶</button>
+        </div>
+
+        <div class="section-content collapsed">
+            <div class="subsection">
+                <div class="subsection-title">📌 整体满意度分析</div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px;">
+                    <div style="text-align:center; padding:14px; background:var(--primary-light); border-radius:8px;">
+                        <div style="font-size:22px; font-weight:700; color:var(--primary);">4.6</div>
+                        <div style="font-size:12px; color:var(--gray-500); margin-top:2px;">整体满意度</div>
+                    </div>
+                    <div style="text-align:center; padding:14px; background:var(--success-light); border-radius:8px;">
+                        <div style="font-size:22px; font-weight:700; color:var(--success);">4.8</div>
+                        <div style="font-size:12px; color:var(--gray-500); margin-top:2px;">讲师评分</div>
+                    </div>
+                    <div style="text-align:center; padding:14px; background:var(--warning-light); border-radius:8px;">
+                        <div style="font-size:22px; font-weight:700; color:var(--warning);">4.7</div>
+                        <div style="font-size:12px; color:var(--gray-500); margin-top:2px;">课程内容</div>
+                    </div>
+                </div>
+
+                <p style="font-size:13px; color:var(--gray-600); margin-bottom:12px;"><strong>反馈问题汇总：</strong></p>
+                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+                    <span class="tag" style="background:#fee2e2; color:#991b1b;">时间安排冲突(12次)</span>
+                    <span class="tag" style="background:#fef3c7; color:#92400e;">课程深度不足(6次)</span>
+                    <span class="tag" style="background:#f3f4f6; color:#374151;">面授场地偏远(4次)</span>
+                </div>
+
+                <p style="font-size:13px; color:var(--gray-600); margin-bottom:12px;"><strong>表扬点汇总：</strong></p>
+                <div style="display:flex; flex-wrap:wrap; gap:8px;">
+                    <span class="tag tag-green">讲师授课生动(18次)</span>
+                    <span class="tag tag-green">案例贴近实际(14次)</span>
+                    <span class="tag tag-blue">组织安排周到(11次)</span>
+                </div>
+
+                <div class="insight-box good" style="margin-top:16px;">
+                    <div class="insight-title">✅ 满意度分析洞察</div>
+                    <p>讲师质量获得高度认可（4.8分），授课风格生动、案例丰富。但时间安排是最大短板（4.3分），学员反馈全天面授强度过大且与业务排期冲突。建议下期拆分为半天模块+灵活时段选择。</p>
+                </div>
+            </div>
+
+            <div class="subsection" style="margin-top:24px; padding-top:24px; border-top:2px solid var(--gray-200);">
+                <div class="subsection-title">🎯 日程设计分析</div>
+
+                <div style="background:var(--gray-50); border-radius:8px; padding:14px; margin-bottom:16px;">
+                    <div style="font-size:13px; font-weight:600; margin-bottom:10px;">日程设计检验清单：</div>
+                    <div style="font-size:13px; line-height:2;">
+                        <div>✅ <strong>学员掌握情况检验</strong> - 存在4类检验方式：考试(1次)、鉴定(1次)、作业(1次)、管理演练(1次)</div>
+                        <div>✅ <strong>奖励机制</strong> - 设置了3类奖励：毕业证书、课程证书、积分排名</div>
+                        <div>✅ <strong>主题关联性</strong> - 12个日程名称与"管理者能力提升"主题高度相关，覆盖认知/实践/考核三个阶段</div>
+                    </div>
+                </div>
+
+                <div style="background:var(--gray-50); border-radius:8px; padding:14px;">
+                    <div style="font-size:13px; font-weight:600; margin-bottom:10px;">面授课程满意度反馈：</div>
+                    <div class="table-wrapper">
+                        <table class="data-table" style="font-size:12px; background:white;">
+                            <thead>
+                                <tr><th>课程</th><th>讲师</th><th>整体</th><th>讲师评分</th><th>内容评分</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>高效沟通与冲突管理</td><td>王建军</td><td>4.7</td><td>4.9</td><td>4.6</td></tr>
+                                <tr><td>团队目标设定与OKR</td><td>陈晓东</td><td>4.5</td><td>4.7</td><td>4.8</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="insight-box good" style="margin-top:16px;">
+                    <div class="insight-title">✅ 日程设计评价</div>
+                    <p>项目整体设计结构完整，包含学习检验、激励机制、主题贴切。面授课程讲师质量高（评分4.6-4.9），学员参与度强。建议下期继续保持现有日程框架，优化面授时间安排。</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 模块4：项目费用分析 ========== -->
+    <div class="collapsible-section" id="section-cost">
+        <div class="section-header" onclick="toggleSection('cost')">
+            <div class="header-left">
+                <div class="header-icon">💰</div>
+                <span>项目费用分析</span>
+            </div>
+            <button class="toggle-btn" id="toggle-cost">▶</button>
+        </div>
+
+        <div class="section-content collapsed">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-bottom:24px;">
+                <div>
+                    <h4 style="font-size:13px; font-weight:600; margin-bottom:12px;">费用明细</h4>
+                    <div style="font-size:13px;">
+                        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--gray-200);">
+                            <span>外聘讲师费</span><span style="font-weight:600;">¥ 85,000</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--gray-200);">
+                            <span>场地租赁费</span><span style="font-weight:600;">¥ 12,000</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--gray-200);">
+                            <span>教材及物料费</span><span style="font-weight:600;">¥ 8,500</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--gray-200);">
+                            <span>餐饮茶歇费</span><span style="font-weight:600;">¥ 6,200</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--gray-200);">
+                            <span>在线平台使用费</span><span style="font-weight:600;">¥ 15,000</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid var(--gray-200);">
+                            <span>证书制作费</span><span style="font-weight:600;">¥ 2,800</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:2px solid var(--gray-900);">
+                            <span>其他杂费</span><span style="font-weight:600;">¥ 3,500</span>
+                        </div>
+                        <div style="display:flex; justify-content:space-between; padding:12px 0; font-weight:700; font-size:14px;">
+                            <span>合计</span><span>¥ 133,000</span>
+                        </div>
+                    </div>
+                    <p style="font-size:11px; color:var(--gray-500); margin-top:8px;">
+                        人均培训成本：¥ 2,771/人<br/>
+                        人均有效培养成本：¥ 3,167/人(按毕业人数)
+                    </p>
+                </div>
+                <div style="background:var(--gray-50); border-radius:8px; padding:16px;">
+                    <h4 style="font-size:13px; color:var(--gray-700); margin-bottom:10px;">费用构成</h4>
+                    <div style="height:200px;">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="insight-box info">
+                <div class="insight-title">💡 费用效益分析</div>
+                <p>外聘讲师费占总费用63.9%，对应面授课程满意度最高(4.7)，投入产出比合理。人均有效培养成本¥3,167低于行业平均¥3,500。预算执行率100%，无超支。</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 模块5：项目综合评价 ========== -->
+    <div class="collapsible-section" id="section-summary">
+        <div class="section-header" onclick="toggleSection('summary')">
+            <div class="header-left">
+                <div class="header-icon">📈</div>
+                <span>项目综合评价</span>
+            </div>
+            <button class="toggle-btn" id="toggle-summary">▶</button>
+        </div>
+
+        <div class="section-content collapsed">
+            <div class="subsection">
+                <div class="subsection-title">🏆 项目综合健康评分</div>
+                <div class="score-display">
+                    <div class="score-num">82</div>
+                    <div class="score-label">
+                        <div style="font-size:14px; font-weight:600; color:var(--gray-900);">项目综合评分</div>
+                        <div style="font-size:12px; color:var(--gray-500); margin-top:4px;">
+                            评分规则：满意度(14) + 日程设计(14) + 毕业率(14) + 完成率(14) + 参与率(13) + 通过率(13)
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:20px;">
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:12px;">
+                        <div style="padding:12px; background:var(--gray-50); border-radius:8px; border-left:4px solid var(--primary);">
+                            <div style="font-size:12px; color:var(--gray-600);">整体满意度</div>
+                            <div style="font-size:20px; font-weight:700; color:var(--primary); margin-top:4px;">4.6/5.0</div>
+                        </div>
+                        <div style="padding:12px; background:var(--gray-50); border-radius:8px; border-left:4px solid var(--success);">
+                            <div style="font-size:12px; color:var(--gray-600);">项目毕业率</div>
+                            <div style="font-size:20px; font-weight:700; color:var(--success); margin-top:4px;">87.5%</div>
+                        </div>
+                        <div style="padding:12px; background:var(--gray-50); border-radius:8px; border-left:4px solid var(--warning);">
+                            <div style="font-size:12px; color:var(--gray-600);">日程完成率</div>
+                            <div style="font-size:20px; font-weight:700; color:var(--warning); margin-top:4px;">91.6%</div>
+                        </div>
+                        <div style="padding:12px; background:var(--gray-50); border-radius:8px; border-left:4px solid var(--primary);">
+                            <div style="font-size:12px; color:var(--gray-600);">学员参与率</div>
+                            <div style="font-size:20px; font-weight:700; color:var(--primary); margin-top:4px;">92.5%</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:12px; display:grid; grid-template-columns:repeat(2,1fr); gap:12px;">
+                    <div style="padding:12px; background:var(--gray-50); border-radius:8px; border-left:4px solid var(--success);">
+                        <div style="font-size:12px; color:var(--gray-600);">日程设计评分</div>
+                        <div style="font-size:20px; font-weight:700; color:var(--success); margin-top:4px;">85/100</div>
+                    </div>
+                    <div style="padding:12px; background:var(--gray-50); border-radius:8px; border-left:4px solid var(--primary);">
+                        <div style="font-size:12px; color:var(--gray-600);">考核通过率</div>
+                        <div style="font-size:20px; font-weight:700; color:var(--primary); margin-top:4px;">91.1%</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="subsection" style="margin-top:32px; padding-top:24px; border-top:2px solid var(--gray-200);">
+                <div class="subsection-title">⚠️ 问题洞察 TOP 5</div>
+
+                <div style="margin-bottom:16px;">
+                    <div style="background:var(--danger-light); padding:14px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--danger);">
+                        <div style="font-weight:600; color:var(--danger); margin-bottom:4px;">❌ 问题1：销售部学员淘汰率高（37.5%）</div>
+                        <div style="font-size:12px; color:var(--gray-700);">
+                            <p><strong>洞察：</strong>3名淘汰学员全部来自销售部，共同特征为业务出差频繁、面授缺席、考试准备不充分。</p>
+                            <p style="margin-top:4px;"><strong>根因：</strong>销售部年中业务出差集中，与项目时间安排产生冲突，导致学员无法按时参训。</p>
+                            <p style="margin-top:4px;"><strong>改进建议：</strong>提前协调销售部业务安排，考虑将销售部学员分配至Q2淡季参训，或提供异步学习路径。</p>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--warning-light); padding:14px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--warning);">
+                        <div style="font-weight:600; color:var(--warning); margin-bottom:4px;">⚠️ 问题2：时间安排冲突严重</div>
+                        <div style="font-size:12px; color:var(--gray-700);">
+                            <p><strong>洞察：</strong>满意度问卷中"时间安排"维度评分仅4.3/5.0，为所有维度最低。学员普遍反馈全天面授强度过大。</p>
+                            <p style="margin-top:4px;"><strong>根因：</strong>一次性安排全天面授（6小时），部分学员业务繁忙难以脱身。</p>
+                            <p style="margin-top:4px;"><strong>改进建议：</strong>下期面授改为半天模块(3小时)，提供上午/下午/晚间多个时段选择。</p>
+                        </div>
+                    </div>
+
+                    <div style="background:var(--warning-light); padding:14px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--warning);">
+                        <div style="font-weight:600; color:var(--warning); margin-bottom:4px;">⚠️ 问题3：部门差异明显（45分差距）</div>
+                        <div style="font-size:12px; color:var(--gray-700);">
+                            <p><strong>洞察：</strong>部门学习行为打分差异大，产品研发部89分 vs 财务部42分，相差47分。</p>
+                            <p style="margin-top:4px;"><strong>根因：</strong>财务部3名学员中仅1人完成，主要因为工作排期冲突和出差。</p>
+                            <p style="margin-top:4px;"><strong>改进建议：</strong>提前与财务、销售部门主管沟通，共同制定参训时间表，确保部门支持。</p>
+                        </div>
+                    </div>
+
+                    <div style="background:#eff6ff; padding:14px; border-radius:8px; margin-bottom:12px; border-left:4px solid var(--primary);">
+                        <div style="font-weight:600; color:var(--primary); margin-bottom:4px;">ℹ️ 问题4：BOTTOM学员学习积极性不足</div>
+                        <div style="font-size:12px; color:var(--gray-700);">
+                            <p><strong>洞察：</strong>BOTTOM 5学员评分平均67.8分，与TOP学员(93.4分)相差25.6分。差距主要体现在"开始学习滞后"和"考勤缺勤"。</p>
+                            <p style="margin-top:4px;"><strong>根因：</strong>缺乏前期学习动员，未对后进学员提前干预。</p>
+                            <p style="margin-top:4px;"><strong>改进建议：</strong>项目开始后第1-3天设置学习提醒，第2周完成率&lt;50%时班主任主动干预。</p>
+                        </div>
+                    </div>
+
+                    <div style="background:#eff6ff; padding:14px; border-radius:8px; border-left:4px solid var(--primary);">
+                        <div style="font-weight:600; color:var(--primary); margin-bottom:4px;">ℹ️ 问题5：某些知识点掌握不足</div>
+                        <div style="font-size:12px; color:var(--gray-700);">
+                            <p><strong>洞察：</strong>AI陪练"情绪识别与回应"维度平均分65.4，达标率仅67.4%，是所有维度最低。</p>
+                            <p style="margin-top:4px;"><strong>根因：</strong>学员在情感密集型决策场景中能力不足，需要专项训练。</p>
+                            <p style="margin-top:4px;"><strong>改进建议：</strong>设计专题工作坊，引入"情绪管理"话术模型，增加情景练习机会。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 模块6-10：现有板块（收起状态）========== -->
+
+    <!-- 考试洞察 -->
+    <div class="collapsible-section" id="section-exam">
+        <div class="section-header" onclick="toggleSection('exam')">
+            <div class="header-left">
+                <div class="header-icon">📝</div>
+                <span>考试洞察</span>
+            </div>
+            <button class="toggle-btn" id="toggle-exam">▶</button>
+        </div>
+        <div class="section-content collapsed">
+            <p style="color:var(--gray-600); font-size:13px;">管理能力在线考试 - 6个知识点掌握情况分析</p>
+        </div>
+    </div>
+
+    <!-- 作业洞察 -->
+    <div class="collapsible-section" id="section-homework">
+        <div class="section-header" onclick="toggleSection('homework')">
+            <div class="header-left">
+                <div class="header-icon">📄</div>
+                <span>作业洞察</span>
+            </div>
+            <button class="toggle-btn" id="toggle-homework">▶</button>
+        </div>
+        <div class="section-content collapsed">
+            <p style="color:var(--gray-600); font-size:13px;">管理案例分析作业得分分布与质量评估</p>
+        </div>
+    </div>
+
+    <!-- AI陪练洞察 -->
+    <div class="collapsible-section" id="section-aipractice">
+        <div class="section-header" onclick="toggleSection('aipractice')">
+            <div class="header-left">
+                <div class="header-icon">🤖</div>
+                <span>AI陪练洞察</span>
+            </div>
+            <button class="toggle-btn" id="toggle-aipractice">▶</button>
+        </div>
+        <div class="section-content collapsed">
+            <p style="color:var(--gray-600); font-size:13px;">绩效面谈模拟 - 4个剧本×维度评估</p>
+        </div>
+    </div>
+
+    <!-- 管理者演练洞察 -->
+    <div class="collapsible-section" id="section-practice">
+        <div class="section-header" onclick="toggleSection('practice')">
+            <div class="header-left">
+                <div class="header-icon">🎯</div>
+                <span>管理者演练洞察</span>
+            </div>
+            <button class="toggle-btn" id="toggle-practice">▶</button>
+        </div>
+        <div class="section-content collapsed">
+            <p style="color:var(--gray-600); font-size:13px;">决策力综合考核 - 4个场景热力图</p>
+        </div>
+    </div>
+
+    <!-- 淘汰学员分析 -->
+    <div class="collapsible-section" id="section-eliminated">
+        <div class="section-header" onclick="toggleSection('eliminated')">
+            <div class="header-left">
+                <div class="header-icon">🚫</div>
+                <span>淘汰学员分析</span>
+            </div>
+            <button class="toggle-btn" id="toggle-eliminated">▶</button>
+        </div>
+        <div class="section-content collapsed">
+            <p style="color:var(--gray-600); font-size:13px;">3名淘汰学员的淘汰原因分析</p>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <div class="report-footer">
+        <p>本报告由培训管理系统自动生成 | 人才发展部</p>
+        <p>报告时间：2026年5月11日 | 机密等级：内部</p>
+    </div>
+
+</div>
+
+<script>
+    // 折叠/展开控制
+    function toggleSection(sectionId) {
+        const content = document.querySelector(`#section-${sectionId} .section-content`);
+        const btn = document.querySelector(`#toggle-${sectionId}`);
+
+        content.classList.toggle('collapsed');
+        btn.classList.toggle('expanded');
+
+        // 如果展开，尝试初始化该section的图表
+        if (!content.classList.contains('collapsed')) {
+            initChartIfNeeded(sectionId);
+        }
+    }
+
+    // 图表延迟初始化
+    function initChartIfNeeded(sectionId) {
+        if (sectionId === 'cost' && !window.costChartInitialized) {
+            initCostChart();
+            window.costChartInitialized = true;
+        }
+    }
+
+    function initCostChart() {
+        const ctx = document.getElementById('costChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['外聘讲师费','场地租赁费','教材物料费','餐饮茶歇费','平台使用费','证书制作费','其他'],
+                    datasets: [{
+                        data: [85000, 12000, 8500, 6200, 15000, 2800, 3500],
+                        backgroundColor: ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#9ca3af']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'right', labels: { font: { size: 11 } } }
+                    }
+                }
+            });
+        }
+    }
+
+    // 页面加载时所有section默认收起
+    document.addEventListener('DOMContentLoaded', function() {
+        // 日程安排情况默认展开
+        document.querySelector('#section-schedule .section-content').classList.remove('collapsed');
+        document.querySelector('#toggle-schedule').classList.add('expanded');
+
+        // 其他所有section默认收起（已在HTML中设置）
+    });
+</script>
+</body>
+</html>
